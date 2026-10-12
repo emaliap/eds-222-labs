@@ -1,0 +1,57 @@
+Lab 2: Investigating claims using inference
+
+```{r}
+library(tidyverse)
+set.seed(222)
+```
+
+```{r}
+soil <- read.csv('/courses/EDS222/data/exide-soil-cores.csv')
+```
+
+```{r}
+# Explore soil df
+head(soil, n = 5)
+dim(soil)
+names(soil)
+```
+
+H0: There is no difference between lead in drip line and yard.
+Ha: Lead is elevated in the drip line compared to the rest of the yard.
+
+## Calculate the observed value of the statistic
+Difference in means between samples from the drip line and the yard
+```{r}
+means <- soil |>  
+    summarise(mean_pb_ppm = mean(pb_ppm, na.rm = TRUE),
+    .by = location_code)
+
+diff_means <- means$mean_pb_ppm[2] - means$mean_pb_ppm[1] # DL - YD
+```
+
+```{r}
+soil |> 
+    count(location_code)
+```
+
+## Shuffle the predictor variable and recalculate the statistic
+
+```{r}
+shuffled_location <- sample(x = soil$location_code, size = length(soil$location_code), replace = FALSE)
+shuffled_location
+```
+
+
+```{r}
+randomized_df <- soil |> 
+    mutate(location_code = shuffled_location)
+randomized_df
+```
+
+```{r}
+recalc_means <- randomized_df |>  
+    summarise(mean_pb_ppm = mean(pb_ppm, na.rm = TRUE),
+    .by = location_code)
+
+recalc_diff <- recalc_means$mean_pb_ppm[2] - recalc_means$mean_pb_ppm[1] # DL - YD
+```

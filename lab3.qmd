@@ -1,0 +1,84 @@
+
+## Pre-lab lecture
+
+```{r}
+library(tidyverse)
+set.seed(222)
+theme_set(theme_bw())
+```
+
+## Simulate data following a linear regression model
+
+Example: relationship between water temp and length of copepods
+
+1. Choose parameters
+
+Model has 3 parameters: 2 betas and a sigma. Our simulation needs one more parameter, our sample size
+```{r}
+beta_0 <- 3000 # Intercept: length of copepod when temp is 0 degC
+beta_1 <- -55 # Slope: chane in copepod length per degC
+sigma <- 100 # Sd of the residuals, the spread of the points around the lins
+n <- 50 # Sample size
+```
+
+2. Simulate data
+
+a. Simulate the predictor
+
+For temp choosing uniformly distirbuted random temps between 2 and 14 degc
+```{r}
+temp_c <- runif(n, min = 2, max = 14)
+```
+
+b. Calculate the expected
+
+```{r}
+expected_length_um <- beta_0 + beta_1 * temp_c 
+```
+
+c. Simulate the response
+
+The response is normally distibuted around the line
+```{r}
+length_um <- rnorm(n, mean = expected_length_um, sd = sigma) # Notice the mean is the vector of expected values
+```
+
+d. Assemble a dataframe
+
+```{r}
+# Create a tibble
+copepods <- tibble(temp_c, length_um)
+
+# Visualize the data
+ggplot(copepods, aes(temp_c, length_um)) +
+    geom_point()
+```
+
+3. Fit the model
+
+use lm() to fit a model. Specify the relationship between response and predictor with a formula
+```{r}
+copepod_lm <- lm(length_um ~ temp_c, data = copepods)
+```
+
+4. Interperet the model
+
+a. Inspect coefficients using summary()
+```{r}
+summary(copepod_lm)
+```
+
+b. Use sigma() to get the model estimate of sigma
+
+```{r}
+sigma(copepod_lm)
+```
+
+## Recap: 
+
+When simulating data from a linear regression model
+
+1. Choose parameters (betas, sigma, n)
+2. Simulate the data (predictor, expected, response)
+3. Fit the model (lm())
+Interpret the model (summary(), sigma())

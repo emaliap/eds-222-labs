@@ -1,0 +1,119 @@
+Lab 1: Reliability of Soil Lead Measurements
+
+```{r}
+library(tidyverse)
+```
+
+```{r}
+soil <- read.csv('/courses/EDS222/data/exide-soil-cores.csv')
+```
+
+```{r}
+# Explore soil df
+head(soil, n = 5)
+dim(soil)
+names(soil)
+```
+
+
+```{r}
+# Distribution of soil core lead measurements
+ggplot(
+    data = soil,
+    mapping = aes(
+        x = pb_ppm
+    )
+) +
+    geom_histogram() +
+    xlim(0,2000) +
+    geom_vline(xintercept = 80, color = 'blue') +
+    geom_vline(xintercept = 200, color = 'blue')
+```
+
+
+```{r}
+# Distribution of property-level mean measurements
+prop_means <- soil |>  
+    summarise(mean_pb_ppm = mean(pb_ppm, na.rm = TRUE),
+    .by = property_id)
+
+ggplot(
+    data = prop_means,
+    mapping = aes(
+        x = mean_pb_ppm
+    )
+) +
+    geom_histogram() +
+    xlim(0,2000) +
+    geom_vline(xintercept = 80, color = 'blue') +
+    geom_vline(xintercept = 200, color = 'blue')
+```
+
+
+```{r}
+# Property-level variability
+prop_sd <- soil |>  
+    summarise(sd_pb_ppm = sd(pb_ppm, na.rm = TRUE),
+    .by = property_id)
+
+ggplot(
+    data = prop_sd,
+    mapping = aes(
+        x = sd_pb_ppm
+    )
+) +
+    geom_histogram() +
+    xlim(0,1000) +
+    geom_vline(xintercept = 80, color = 'blue') +
+    geom_vline(xintercept = 200, color = 'blue')
+```
+
+
+```{r}
+# Lead measurements by location
+soil |> 
+    distinct(location_code)
+```
+
+```{r}
+ggplot(
+    data = soil,
+    mapping = aes(
+        x = pb_ppm
+    )
+) +
+    geom_histogram() +
+    xlim(0,2000) +
+    geom_vline(xintercept = 80, color = 'blue') +
+    geom_vline(xintercept = 200, color = 'blue') +
+    facet_wrap('location_code')
+```
+
+```{r}
+# Drip line vs. yard, at the property level
+soil2 <- soil |> 
+    mutate(is_dripline = ifelse(location_code == 'DL', TRUE, FALSE))|>
+        summarise(mean_ppm = mean(pb_ppm),
+        .by = c('property_id', 'is_dripline')) |> 
+            pivot_wider(names_from = is_dripline, values_from = mean_ppm, names_prefix = 'dripline_') |> 
+            mutate(difference = dripline_TRUE - dripline_FALSE)
+head(soil2, n = 5)
+```
+
+```{r}
+ggplot(
+    data = soil2,
+    mapping = aes(
+        x = difference
+    )
+) +
+    geom_histogram() +
+    xlim(0,2000) +
+    geom_vline(xintercept = 80, color = 'blue') +
+    geom_vline(xintercept = 200, color = 'blue') 
+```
+
+
+
+
+
