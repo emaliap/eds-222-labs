@@ -1,0 +1,73 @@
+# Simpsons paradox
+
+## Pre-lab lecture
+```{r}
+library(tidyverse)
+set.seed(222)
+theme_set(theme_bw(16))
+```
+
+Choose the parameters
+```{r}
+beta_0 <- 10 # Y intercept
+beta_1 <- 0.1 # Additional typo per increase in typing speed
+beta_2 <- -10 # Difference between typist B and the reference level A
+sigma <- 3 # SD of the residuals
+```
+
+Generate predictors
+- For simpson's paradox there must be a correlation between the predictors
+```{r}
+# Sample size
+N <- 30
+
+# Typist identities
+typist <- sample(c("A", "B"), N, replace = TRUE) # 30 values of A and B
+
+# Dummy variable for typist B
+typistB <- ifelse(typist == "B", 1, 0)
+
+# KEY PART: Create relationship between predictors
+# Continuous predictor variable dependent on categorical variable
+typing_speed <- rnorm(N, mean = ifelse(typist == "B", 100, 45), sd = 15) # Tying speed random, but expected mean changes with categorical
+```
+
+Calculate the expected value of the response
+```{r}
+expected_typos <- beta_0 + beta_1 * typing_speed + beta_2 * typistB
+```
+
+Simulate the response variable
+```{r}
+typos <- rnorm(
+  n = N,
+  mean = expected_typos,
+  sd = sigma
+)
+```
+
+Visualize
+```{r}
+simulated_typing <- tibble(typing_speed, typos, typist)
+
+ggplot(simulated_typing, aes(typing_speed, typos, fill = typist)) +
+  geom_point(size = 2, shape = 21)
+```
+
+Fit and interpret
+```{r}
+# Only look at typing speed
+one_predictor_lm <- lm(typos ~ typing_speed, simulated_typing)
+summary(one_predictor_lm)
+
+# Negative relationship
+```
+
+
+```{r}
+# Look at both typing speed and the typist
+two_predictor_lm <- lm(typos ~ typing_speed + typist, simulated_typing)
+summary(two_predictor_lm)
+
+# Positive relationship
+```
