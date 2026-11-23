@@ -1,0 +1,168 @@
+---
+title: Lab 3: Simulate Simpson's Paradox
+subtitle: Multiple Regression
+format: html
+---
+
+# Background
+
+See [EDS 222 Lab 4](https://eds-222-stats-f26.github.io/course-materials/labs/lab4.html)
+
+# Pre-lab lecture 
+```{r}
+library(tidyverse)
+set.seed(222)
+theme_set(theme_bw())
+```
+
+## Choose our parameters
+
+```{r}
+beta_0 <- 10 # Intercept
+beta_1 <- 0.1 # Additional typo per increase in typing speed (slope)
+beta_2 <- -10 # Difference between typist B and the reference level (A)
+sigma <- 3 # Standard deviation of residuals 
+```
+
+## Generate our predictors
+
+Remember, for Simpson's paradox there must be a correlation between the predictors. 
+
+```{r}
+# Sample size
+N <- 30
+# Typist identities
+typist <- sample(c("A", "B"), N, replace = TRUE)
+# Dummy variable for typist B
+typistB<- ifelse(typist == "B", 1, 0)
+
+# THIS IS THE KEY PART
+typing_speed <- rnorm(N, mean = ifelse(typist == "B", 100, 45), sd = 15)
+
+# There has to be a relationship between the predictors - we create that relationship with the above line. This line says that typing speed is random but the mean expected value of the continuous variable changes with the categorical variable (eg the mean is different for typist A and typist B). This is the biggest difference between lab 4 and 3 from a coding perspective 
+
+```
+
+## Calculate the expected value of the response
+
+```{r}
+expected_typos <- beta_0 + beta_1 * typing_speed + beta_2 * typistB
+```
+
+## Simulate the response variable
+
+```{r}
+typos <- rnorm(
+    n = N, 
+    mean = expected_typos, 
+    sd = sigma
+)
+```
+
+## Visualize
+
+
+```{r}
+simulated_typing <- tibble(typing_speed, typos, typist)
+
+ggplot(simulated_typing, aes(typing_speed, typos, fill = typist)) +
+    geom_point(size = 2, shape = 21) 
+```
+
+## Fit and interpret
+
+If we only look at typing speed:
+
+```{r}
+one_predictor_lm <- lm(typos ~ typing_speed, simulated_typing)
+summary(one_predictor_lm)
+```
+
+If we look at both typing speed and the typist: 
+
+```{r}
+two_predictor_lm <- lm(typos ~ typing_speed + typist, simulated_typing)
+summary(two_predictor_lm)
+```
+
+# In Class
+
+## Simulate the data
+
+Life expectancy of mountain lions and raccoons by body weight. Reference level is mountain lion (due to alphabetical order) 
+
+```{r}
+beta_0 <- 30 # Intercept
+beta_1 <- -0.2 # Coefficient for the first (continuous) predictor (slope)
+beta_2 <- -20 # Coefficient for the second (categorical) predictor
+sigma <- 2 # Standard deviation of the residuals
+```
+
+## Generate random values
+
+1. Simulate predictor variables
+```{r}
+# Sample size
+N <- 30
+# Edit the following code to simulate your _categorical_ predictor variable.
+species <- sample(c("M", "R"), N, replace = TRUE)
+
+# Dummy variable for raccoon 
+isspeciesR <- ifelse(species == "R", 1, 0)
+
+# Edit the following code to simulate your _continuous_ predictor variable. Make sure it depends on your second predictor!
+body_size <- rnorm(
+  n = N,
+  mean = ifelse(species == "R", 15, 75), sd = 5
+)
+```
+
+2. Calculate the expected value of the response
+
+```{r}
+# Edit the following code to calculate the _expected_ value of the response
+expected_age <- beta_0 + beta_1 * body_size + beta_2 * isspeciesR
+```
+
+3. Simulate the response variable
+
+```{r}
+# Edit the following code to simulate your _response_ variable
+sim_age <- rnorm(
+    n = N,
+    mean = expected_age,
+    sd = sigma
+)
+```
+
+4. Visualize the simulated data
+
+```{r}
+# First, put the predictors and response in a data frame all together
+simulated_values <- tibble(body_size, sim_age, species)
+
+# Then, use ggplot to make a scatter plot. Think carefully about which aesthetics to use.
+
+ggplot(simulated_values, aes(body_size, sim_age, fill = species)) + 
+    geom_point(size = 2, shape = 21)
+```
+
+## Fit and interpret regression models 
+
+Use lm() to fit two regression models to your simulated data.
+
+In the first model, only include the first predictor.
+
+Use `summary()` on both models. If you’ve simulated the paradox properly, the sign of the coefficient for the first predictor should flip between the models.
+
+```{r}
+one_predictor_lm <- lm(sim_age ~ body_size, simulated_values)
+summary(one_predictor_lm)
+```
+
+In the second model, include both predictors.
+
+```{r}
+two_predictor_lm <- lm(sim_age ~ body_size + species, simulated_values)
+summary(two_predictor_lm)
+```
